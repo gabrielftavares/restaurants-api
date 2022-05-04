@@ -1,6 +1,6 @@
 class Api::V1::RestaurantsController < Api::V1::BaseController
   acts_as_token_authentication_handler_for User, except: %i[index show]
-  before_action :set_restaurant, only: %i[show update]
+  before_action :set_restaurant, only: %i[show update destroy]
 
   def index
     @restaurants = policy_scope(Restaurant)
@@ -17,6 +17,22 @@ class Api::V1::RestaurantsController < Api::V1::BaseController
     else
       render_error
     end
+  end
+
+  def create
+    @restaurant = Restaurant.new(restaurant_params)
+    @restaurant.user = current_user
+    authorize @restaurant
+    if @restaurant.save
+      render :show
+    else
+      render_error
+    end
+  end
+
+  def destroy
+    @restaurant.destroy
+    head :no_content
   end
 
   private
